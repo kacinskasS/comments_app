@@ -31,18 +31,42 @@ function newComment()
 
         $email = $_POST["email"];
 
+        $comment = $_POST["comment"];
+        $safe_comment = htmlspecialchars($comment, ENT_QUOTES);
+
+        $safe_email = htmlspecialchars($email, ENT_QUOTES);
+
+        $name = $_POST["name"];
+        $safe_name = htmlspecialchars($name, ENT_QUOTES);
+
+
         $errors = [];
 
-        if (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $email)) {
-            $errors['email'] = 'neteisingas el. paštas';
+        if (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $safe_email)) {
+            $errors['email'] = 'Neteisingas el. paštas';
         }
 
-        if (!isset($_POST['name']) || '' === $_POST['name']) {
-            $errors['name'] = 'nurodykite vardą pavardę';
+        $safe_namelength= strlen($safe_name);
+        if($safe_namelength >= 64) {
+            $errors['name'] = 'Įvestas per ilgas vardas';
         }
 
-        if (!isset($_POST['comment']) || '' === $_POST['comment']) {
-            $errors['comment'] = 'nepalikite tuščio komentaro';
+        $safe_emaillength= strlen($safe_email);
+        if($safe_emaillength >= 64) {
+            $errors['email'] = 'Įvestas per ilgas el. paštas';
+        }
+
+        $safe_commentlength= strlen($safe_comment);
+        if($safe_commentlength >= 255) {
+            $errors['comment'] = 'Įvestas per ilgas komentaras';
+        }
+
+        if (!isset($safe_name) || '' === $safe_name) {
+            $errors['name'] = 'Nurodykite vardą pavardę';
+        }
+
+        if (!isset($safe_comment) || '' === $safe_comment) {
+            $errors['comment'] = 'Nepalikite tuščio komentaro';
         }
 
         if (empty($errors)) {
@@ -51,7 +75,7 @@ function newComment()
             if (!isset($_POST['parent_id'])) {
                 $_POST['parent_id'] = 0;
             }
-            $args = [$_POST['email'], $_POST['name'], $_POST['comment'], $_POST['parent_id']];
+            $args = [$safe_email, $safe_name, $safe_comment, $_POST['parent_id']];
             $comment_id = dbQuery($query, $types, $args, 'w', true);
 
             return ['id' => $comment_id];
